@@ -1,0 +1,234 @@
+﻿@model ListaTareas.Models.TareaViewModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tareas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+        }
+
+        .agregar-tarea {
+            padding: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-agregar {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-tarea {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-tarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-agregar {
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-agregar:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .lista-tareas {
+            padding: 20px 30px 30px 30px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .tarea-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            animation: slideIn 0.3s ease;
+        }
+
+        @@keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .tarea-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .tarea-item.completada {
+            opacity: 0.6;
+        }
+
+        .tarea-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .tarea-texto {
+            flex: 1;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .tarea-item.completada .tarea-texto {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        .btn-eliminar {
+            padding: 8px 16px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-eliminar:hover {
+            background: #c82333;
+        }
+
+        .sin-tareas {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-size: 18px;
+        }
+
+        .sin-tareas-icono {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✅ Mi Lista de Tareas</h1>
+            <div class="stats">
+                @{
+                    var totalTareas = Model.Tareas.Count;
+                    var tareasCompletadas = Model.Tareas.Count(t => t.Completada);
+                    var tareasPendientes = totalTareas - tareasCompletadas;
+                }
+                Total: @totalTareas | Completadas: @tareasCompletadas | Pendientes: @tareasPendientes
+            </div>
+        </div>
+
+        <div class="agregar-tarea">
+            <form asp-action="Agregar" method="post" class="form-agregar">
+                <input type="text"
+                       name="NuevaTarea"
+                       class="input-tarea"
+                       placeholder="¿Qué necesitas hacer?"
+                       required />
+                <button type="submit" class="btn-agregar">➕ Agregar</button>
+            </form>
+        </div>
+
+        <div class="lista-tareas">
+            @if (Model.Tareas.Any())
+            {
+                foreach (var tarea in Model.Tareas)
+                {
+                    <div class="tarea-item @(tarea.Completada ? "completada" : "")">
+                        <form asp-action="Completar" method="post" style="display: inline;">
+                            <input type="hidden" name="id" value="@tarea.Id" />
+                            <input type="checkbox"
+                                   class="tarea-checkbox"
+                                   @(tarea.Completada ? "checked" : "")
+                                   onchange="this.form.submit()" />
+                        </form>
+
+                        <span class="tarea-texto">@tarea.Descripcion</span>
+
+                        <form asp-action="Eliminar" method="post" style="display: inline;">
+                            <input type="hidden" name="id" value="@tarea.Id" />
+                            <button type="submit" class="btn-eliminar">🗑️</button>
+                        </form>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="sin-tareas">
+                    <div class="sin-tareas-icono">📝</div>
+                    <p>No hay tareas aún. ¡Agrega tu primera tarea!</p>
+                </div>
+            }
+        </div>
+    </div>
+</body>
+</html>
